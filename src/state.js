@@ -1,6 +1,7 @@
 export function createInitialState() {
   return {
     method: "rle",
+    direction: "compress",
     input: "AAABBC",
     steps: [],
     stepIndex: 0,
@@ -16,6 +17,7 @@ export function reduceState(state, action) {
       return {
         ...state,
         method: action.method,
+        direction: action.direction,
         input: action.input,
         steps: action.steps,
         stepIndex: 0,
@@ -26,6 +28,7 @@ export function reduceState(state, action) {
       return {
         ...state,
         method: action.method,
+        direction: action.direction,
         input: action.input,
         steps: [],
         stepIndex: 0,

@@ -1,13 +1,23 @@
 import { encodeRle } from "./algorithms/rle.js";
+import { decodeRle } from "./algorithms/rle.js";
 import { encodeHuffman } from "./algorithms/huffman.js";
+import { decodeHuffman } from "./algorithms/huffman.js";
 import { encodeLzw } from "./algorithms/lzw.js";
+import { decodeLzw } from "./algorithms/lzw.js";
 import { createInitialState, reduceState } from "./state.js";
 import { bindUi, renderApp } from "./ui.js";
 
 const algorithms = {
-  rle: encodeRle,
-  huffman: encodeHuffman,
-  lzw: encodeLzw,
+  compress: {
+    rle: encodeRle,
+    huffman: encodeHuffman,
+    lzw: encodeLzw,
+  },
+  decompress: {
+    rle: decodeRle,
+    huffman: decodeHuffman,
+    lzw: decodeLzw,
+  },
 };
 
 let state = createInitialState();
@@ -32,27 +42,32 @@ function syncTimer() {
   }
 }
 
-function load(method, input) {
+function load(method, direction, input) {
   let steps;
   try {
-    steps = algorithms[method](input);
+    steps = algorithms[direction][method](input);
   } catch (error) {
     dispatch({
       type: "ERROR",
       method,
+      direction,
       input,
       message: error instanceof Error ? error.message : "Vstup se nepodařilo zpracovat.",
     });
     return;
   }
-  dispatch({ type: "LOAD", method, input, steps });
+  dispatch({ type: "LOAD", method, direction, input, steps });
 }
 
 bindUi({
-  load: (input) => load(state.method, input),
+  load: (input) => load(state.method, state.direction, input),
   selectMethod: (method) => {
     const input = document.getElementById("text-input").value;
-    load(algorithms[method] ? method : state.method, input);
+    load(algorithms.compress[method] ? method : state.method, state.direction, input);
+  },
+  selectDirection: (direction) => {
+    const input = document.getElementById("text-input").value;
+    load(state.method, direction, input);
   },
   previous: () => dispatch({ type: "PREVIOUS" }),
   next: () => dispatch({ type: "NEXT" }),
@@ -67,4 +82,4 @@ bindUi({
   },
 });
 
-load(state.method, state.input);
+load(state.method, state.direction, state.input);

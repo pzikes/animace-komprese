@@ -30,7 +30,37 @@ function createSvg(width, height, label) {
   });
 }
 
-function renderRle(input, step) {
+function renderRle(input, step, direction) {
+  if (direction === "decompress") {
+    const runs = step.runs || [];
+    const output = Array.from(step.output || "");
+    const width = Math.max(340, runs.length * 92 + 32, output.length * 52 + 32);
+    const svg = createSvg(width, 152, "RLE skupiny a postupně obnovený text");
+    svg.append(svgElement("text", { x: 4, y: 17, class: "svg-label" }, "KOMPRIMOVANÝ ZÁPIS"));
+    runs.forEach((run, index) => {
+      const x = 4 + index * 92;
+      const active = index === step.activeRun;
+      svg.append(svgElement("rect", {
+        x, y: 29, width: 82, height: 38, rx: 7,
+        class: active ? "svg-token-active" : "svg-token",
+      }));
+      svg.append(svgElement("text", {
+        x: x + 41, y: 53, "text-anchor": "middle",
+        class: active ? "svg-output" : "svg-value",
+      }, `${displaySymbol(run.symbol)} × ${run.count}`));
+    });
+    svg.append(svgElement("text", { x: 4, y: 91, class: "svg-label" }, "OBNOVENÝ TEXT"));
+    output.forEach((symbol, index) => {
+      const x = 4 + index * 52;
+      svg.append(svgElement("rect", { x, y: 103, width: 44, height: 38, rx: 7, class: "svg-token" }));
+      svg.append(svgElement("text", {
+        x: x + 22, y: 127, "text-anchor": "middle", class: "svg-output",
+      }, displaySymbol(symbol)));
+    });
+    if (!output.length) svg.append(svgElement("text", { x: 4, y: 126, class: "svg-small" }, "Zatím nic"));
+    return svg;
+  }
+
   const symbols = Array.from(input);
   const width = Math.max(340, symbols.length * 52 + 32);
   const svg = createSvg(width, 152, "Znaky vstupu a skupiny nalezené metodou RLE");
@@ -135,25 +165,45 @@ function renderHuffman(step) {
 }
 
 function renderLzw(input, step) {
+  const direction = step.encodedCodes ? "decompress" : "compress";
   const symbols = Array.from(input);
-  const svgWidth = Math.max(340, symbols.length * 37 + 24);
+  const codes = step.encodedCodes || [];
+  const svgWidth = direction === "decompress"
+    ? Math.max(340, codes.length * 52 + 24)
+    : Math.max(340, symbols.length * 37 + 24);
   const dict = step.dictionary || [];
   const columns = Math.max(1, Math.min(5, Math.floor(svgWidth / 125)));
   const rows = Math.ceil(dict.length / columns);
   const height = Math.max(145, 130 + rows * 37);
-  const svg = createSvg(svgWidth, height, "Vstupní znaky, slovník LZW a vytvořené kódy");
-  svg.append(svgElement("text", { x: 4, y: 15, class: "svg-label" }, "VSTUP"));
-  symbols.forEach((symbol, index) => {
-    const x = 4 + index * 37;
-    svg.append(svgElement("rect", {
-      x, y: 24, width: 31, height: 30, rx: 6,
-      class: index === step.examinedIndex ? "svg-token-active" : "svg-token",
-    }));
-    svg.append(svgElement("text", {
-      x: x + 15.5, y: 43, "text-anchor": "middle",
-      class: index === step.examinedIndex ? "svg-output" : "svg-value",
-    }, displaySymbol(symbol)));
-  });
+  const svg = createSvg(svgWidth, height, "LZW kódy, slovník a rekonstruovaný text");
+  if (direction === "decompress") {
+    svg.append(svgElement("text", { x: 4, y: 15, class: "svg-label" }, "KÓDY KE ČTENÍ"));
+    codes.forEach((code, index) => {
+      const x = 4 + index * 52;
+      const active = index === step.codeIndex;
+      svg.append(svgElement("rect", {
+        x, y: 24, width: 44, height: 30, rx: 6,
+        class: active ? "svg-token-active" : "svg-token",
+      }));
+      svg.append(svgElement("text", {
+        x: x + 22, y: 43, "text-anchor": "middle",
+        class: active ? "svg-output" : "svg-value",
+      }, String(code)));
+    });
+  } else {
+    svg.append(svgElement("text", { x: 4, y: 15, class: "svg-label" }, "VSTUP"));
+    symbols.forEach((symbol, index) => {
+      const x = 4 + index * 37;
+      svg.append(svgElement("rect", {
+        x, y: 24, width: 31, height: 30, rx: 6,
+        class: index === step.examinedIndex ? "svg-token-active" : "svg-token",
+      }));
+      svg.append(svgElement("text", {
+        x: x + 15.5, y: 43, "text-anchor": "middle",
+        class: index === step.examinedIndex ? "svg-output" : "svg-value",
+      }, displaySymbol(symbol)));
+    });
+  }
 
   svg.append(svgElement("text", { x: 4, y: 76, class: "svg-label" }, "SLOVNÍK"));
   dict.forEach((entry, index) => {
@@ -169,10 +219,14 @@ function renderLzw(input, step) {
     svg.append(svgElement("text", { x: x + 8, y: y + 19, class: "svg-value" }, `${entry.code}  ${entry.phrase}`));
   });
   const outputY = 103 + rows * 36;
-  svg.append(svgElement("text", { x: 4, y: outputY, class: "svg-label" }, "VYDANÉ KÓDY"));
+  svg.append(svgElement("text", {
+    x: 4, y: outputY, class: "svg-label",
+  }, direction === "decompress" ? "OBNOVENÝ TEXT" : "VYDANÉ KÓDY"));
   const output = step.output || [];
   svg.append(svgElement("text", { x: 4, y: outputY + 23, class: "svg-output" },
-    output.length ? output.join("  ·  ") : "Zatím žádný kód"));
+    direction === "decompress"
+      ? (output || "Zatím nic")
+      : (output.length ? output.join("  ·  ") : "Zatím žádný kód")));
   return svg;
 }
 
@@ -185,10 +239,27 @@ function makeDetails(state, step) {
       list.append(element("span", { className: "code-item" }, `${displaySymbol(symbol)} → ${code}`));
     }
     details.append(heading, list);
+    if (state.direction === "decompress") {
+      const bits = element("p", { className: "bit-stream" }, "Bitový zápis: ");
+      Array.from(step.encodedBits || "").forEach((bit, index) => {
+        const status = index >= (step.bitStart ?? step.bitEnd ?? 0) && index < (step.bitEnd || 0)
+          ? "bit-active"
+          : index < (step.bitEnd || 0) ? "bit-done" : "";
+        bits.append(element("span", { className: status }, bit));
+      });
+      details.append(
+        bits,
+        element("p", { className: "decoded-text" }, `Obnovený text: ${step.output || "Zatím nic"}`),
+      );
+    }
   }
-  if (state.method === "lzw" && step.addedPhrase) {
+  if (state.method === "lzw" && state.direction === "compress" && step.addedPhrase) {
     details.append(element("p", { className: "lzw-note" },
       `Nová položka: „${step.addedPhrase}“ → kód ${step.addedCode}`));
+  }
+  if (state.method === "lzw" && state.direction === "decompress" && step.addedPhrase) {
+    details.append(element("p", { className: "lzw-note" },
+      `Nová položka slovníku: „${step.addedPhrase}“ → kód ${step.addedCode}`));
   }
   return details;
 }
@@ -199,7 +270,17 @@ export function renderApp(state) {
     button.classList.toggle("is-selected", selected);
     button.setAttribute("aria-pressed", String(selected));
   });
-
+  document.querySelectorAll("[data-direction]").forEach((button) => {
+    const selected = button.dataset.direction === state.direction;
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  document.getElementById("input-label").textContent = state.direction === "compress"
+    ? "Text ke kompresi"
+    : "Původní text pro ukázku dekomprese";
+  document.getElementById("direction-help").textContent = state.direction === "compress"
+    ? "Sleduj, jak se znaky z původního textu ukládají úsporněji."
+    : "Aplikace text nejprve zakóduje a potom ukáže, jak se z uložených dat obnoví.";
   const input = document.getElementById("text-input");
   if (input.value !== state.input && document.activeElement !== input) input.value = state.input;
   document.getElementById("character-count").textContent = `${Array.from(input.value).length} / 40`;
@@ -226,7 +307,7 @@ export function renderApp(state) {
   document.getElementById("step-description").textContent = step.description;
   const visualization = document.getElementById("visualization");
   visualization.replaceChildren(
-    state.method === "rle" ? renderRle(state.input, step)
+    state.method === "rle" ? renderRle(state.input, step, state.direction)
       : state.method === "huffman" ? renderHuffman(step)
         : renderLzw(state.input, step),
     makeDetails(state, step),
@@ -252,6 +333,9 @@ export function bindUi(actions) {
   });
   document.querySelectorAll("[data-method]").forEach((button) => {
     button.addEventListener("click", () => actions.selectMethod(button.dataset.method));
+  });
+  document.querySelectorAll("[data-direction]").forEach((button) => {
+    button.addEventListener("click", () => actions.selectDirection(button.dataset.direction));
   });
   document.querySelectorAll("[data-example]").forEach((button) => {
     button.addEventListener("click", () => actions.load(button.dataset.example));

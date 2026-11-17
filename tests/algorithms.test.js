@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { encodeRle } from "../src/algorithms/rle.js";
-import { encodeHuffman } from "../src/algorithms/huffman.js";
-import { encodeLzw } from "../src/algorithms/lzw.js";
+import { decodeRle, encodeRle } from "../src/algorithms/rle.js";
+import { decodeHuffman, encodeHuffman } from "../src/algorithms/huffman.js";
+import { decodeLzw, encodeLzw } from "../src/algorithms/lzw.js";
 
 test("RLE groups adjacent equal symbols and leaves singletons intact", () => {
   const steps = encodeRle("AAABBC");
@@ -49,5 +49,23 @@ test("all encoders reject empty input, line breaks, and inputs over the limit", 
     assert.throws(() => encode(""), /alespoň jeden znak/);
     assert.throws(() => encode("A\nB"), /jednom řádku/);
     assert.throws(() => encode("A".repeat(41)), /nejvýše 40/);
+  }
+});
+
+test("RLE decompression restores the source one run at a time", () => {
+  const steps = decodeRle("AAABBC");
+  assert.equal(steps[1].output, "AAA");
+  assert.equal(steps.at(-1).output, "AAABBC");
+});
+
+test("Huffman decompression reads variable-length codes and handles one symbol", () => {
+  for (const input of ["BANANA", "AAAA", "Z"]) {
+    assert.equal(decodeHuffman(input).at(-1).output, input);
+  }
+});
+
+test("LZW decompression rebuilds its dictionary and restores sample inputs", () => {
+  for (const input of ["ABABABA", "BANANA", "AAAA", "Z", "ABRACADABRA"]) {
+    assert.equal(decodeLzw(input).at(-1).output, input);
   }
 });

@@ -22,7 +22,7 @@
       <section class="intro" aria-labelledby="page-title">
         <p class="eyebrow">UČ SE OBJEVOVÁNÍM</p>
         <h1 id="page-title">Jak se dají data zmenšit?</h1>
-        <p>Vyber si metodu a sleduj, jak se obyčejný text promění v úspornější zápis. Každý krok můžeš projít vlastním tempem.</p>
+        <p>Vyber si metodu a sleduj, jak se text promění v úspornější zápis — a jak se z něj znovu obnoví. Každý krok můžeš projít vlastním tempem.</p>
       </section>
 
       <section class="method-picker" aria-labelledby="method-heading">
@@ -60,7 +60,12 @@
           <span class="input-limit">Nejvýše 40 znaků</span>
         </div>
         <form id="input-form">
-          <label for="text-input">Text ke kompresi</label>
+          <div class="direction-toggle" role="group" aria-label="Směr ukázky">
+            <button type="button" class="direction-button is-selected" data-direction="compress" aria-pressed="true">Komprese</button>
+            <button type="button" class="direction-button" data-direction="decompress" aria-pressed="false">Dekomprese</button>
+          </div>
+          <p id="direction-help" class="direction-help">Sleduj, jak se znaky z původního textu ukládají úsporněji.</p>
+          <label id="input-label" for="text-input">Text ke kompresi</label>
           <textarea id="text-input" name="text" rows="2" maxlength="80" spellcheck="false">AAABBC</textarea>
           <div class="input-footer">
             <span id="character-count" class="character-count">6 / 40</span>

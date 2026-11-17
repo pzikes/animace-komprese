@@ -71,6 +71,67 @@ export function encodeHuffman(input) {
     description: "Při cestě doleva zapisujeme 0 a při cestě doprava 1. Každý znak má vlastní jednoznačnou cestu od kořene k lístku.",
     forest: [root],
     codes,
+    tree: root,
+  });
+  return steps;
+}
+
+export function decodeHuffman(input) {
+  const symbols = readSymbols(input);
+  const encoded = encodeHuffman(input).at(-1);
+  const { codes, tree } = encoded;
+  const encodedBits = symbols.map((symbol) => codes[symbol]).join("");
+  const steps = [{
+    type: "decompress-start",
+    title: "Začneme číst bitový zápis",
+    description: "Huffmanův strom a tabulka kódů nám pomohou poznat, kde jednotlivé znaky v posloupnosti bitů končí.",
+    forest: [tree],
+    codes,
+    encodedBits,
+    bitEnd: 0,
+    output: "",
+  }];
+  let output = "";
+  let node = tree;
+  let bitStart = 0;
+  let prefix = "";
+
+  for (let index = 0; index < encodedBits.length; index += 1) {
+    const bit = encodedBits[index];
+    if (tree.symbol === null) {
+      node = bit === "0" ? node.left : node.right;
+    }
+    prefix += bit;
+    if (node.symbol === null) continue;
+
+    output += node.symbol;
+    steps.push({
+      type: "decode-symbol",
+      title: `Našli jsme znak „${node.symbol}“`,
+      description: `Kód ${prefix} vede ve stromu k znaku „${node.symbol}“. Přidáme ho do obnoveného textu.`,
+      forest: [tree],
+      codes,
+      encodedBits,
+      bitStart,
+      bitEnd: index + 1,
+      decodedCode: prefix,
+      decodedSymbol: node.symbol,
+      output,
+    });
+    node = tree;
+    bitStart = index + 1;
+    prefix = "";
+  }
+
+  steps.push({
+    type: "decompress-result",
+    title: "Původní text je obnovený",
+    description: "Přečetli jsme všechny bity a z každého kódu obnovili příslušný znak.",
+    forest: [tree],
+    codes,
+    encodedBits,
+    bitEnd: encodedBits.length,
+    output,
   });
   return steps;
 }

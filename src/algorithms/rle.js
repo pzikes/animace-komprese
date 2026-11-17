@@ -40,3 +40,38 @@ export function encodeRle(input) {
   });
   return steps;
 }
+
+export function decodeRle(input) {
+  const runs = encodeRle(input).at(-1).runs;
+  const steps = [{
+    type: "decompress-start",
+    title: "Začneme z komprimovaných skupin",
+    description: "Každá skupina říká, který znak máme opakovat a kolikrát. Budeme je rozbalovat jednu po druhé.",
+    runs,
+    activeRun: -1,
+    output: "",
+  }];
+  let output = "";
+
+  runs.forEach((run, index) => {
+    output += run.symbol.repeat(run.count);
+    steps.push({
+      type: "decompress-run",
+      title: `Rozbalíme skupinu „${run.symbol} × ${run.count}“`,
+      description: `Znak „${run.symbol}“ zapíšeme ${run.count}×. Obnovený text se tím prodlouží.`,
+      runs,
+      activeRun: index,
+      output,
+    });
+  });
+
+  steps.push({
+    type: "decompress-result",
+    title: "Původní text je obnovený",
+    description: "Všechny skupiny jsme rozbalili. Výsledek odpovídá původnímu textu.",
+    runs,
+    activeRun: -1,
+    output,
+  });
+  return steps;
+}

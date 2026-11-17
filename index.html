@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f6fb">
+    <meta name="description" content="Interaktivní průvodce kompresí dat pro žáky 8. a 9. ročníku.">
+    <title>Komprese dat – interaktivní průvodce</title>
+    <link rel="stylesheet" href="./styles/main.css">
+    <script type="module" src="./src/main.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Komprese dat – úvod">
+        <span class="brand-mark" aria-hidden="true">K</span>
+        <span>Komprese dat</span>
+      </a>
+      <span class="topbar-note">Informatika · 8. a 9. ročník</span>
+    </header>
+
+    <main class="page-shell">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">UČ SE OBJEVOVÁNÍM</p>
+        <h1 id="page-title">Jak se dají data zmenšit?</h1>
+        <p>Vyber si metodu a sleduj, jak se obyčejný text promění v úspornější zápis. Každý krok můžeš projít vlastním tempem.</p>
+      </section>
+
+      <section class="method-picker" aria-labelledby="method-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">TŘI ZPŮSOBY</p>
+            <h2 id="method-heading">Vyber metodu komprese</h2>
+          </div>
+        </div>
+        <div class="method-list" role="group" aria-label="Metoda komprese">
+          <button class="method-card is-selected" type="button" data-method="rle" aria-pressed="true">
+            <span class="method-number">01</span>
+            <span class="method-copy"><strong>Run-Length Encoding</strong><small>Počítání opakování</small></span>
+            <span class="method-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button class="method-card" type="button" data-method="huffman" aria-pressed="false">
+            <span class="method-number">02</span>
+            <span class="method-copy"><strong>Huffmanovo kódování</strong><small>Časté znaky = kratší kódy</small></span>
+            <span class="method-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button class="method-card" type="button" data-method="lzw" aria-pressed="false">
+            <span class="method-number">03</span>
+            <span class="method-copy"><strong>LZW</strong><small>Slovník opakujících se skupin</small></span>
+            <span class="method-arrow" aria-hidden="true">↗</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="workspace" aria-labelledby="workspace-title">
+        <div class="workspace-header">
+          <div>
+            <p class="eyebrow">VYZKOUŠEJ SI TO</p>
+            <h2 id="workspace-title">Připrav si vstup</h2>
+          </div>
+          <span class="input-limit">Nejvýše 40 znaků</span>
+        </div>
+        <form id="input-form">
+          <label for="text-input">Text ke kompresi</label>
+          <textarea id="text-input" name="text" rows="2" maxlength="80" spellcheck="false">AAABBC</textarea>
+          <div class="input-footer">
+            <span id="character-count" class="character-count">6 / 40</span>
+            <button class="primary-button" type="submit">Ukázat animaci <span aria-hidden="true">→</span></button>
+          </div>
+        </form>
+        <div class="example-row">
+          <span>Rychlé příklady</span>
+          <button type="button" class="example-chip" data-example="AAABBC">AAABBC</button>
+          <button type="button" class="example-chip" data-example="BANANA">BANANA</button>
+          <button type="button" class="example-chip" data-example="ABRACADABRA">ABRACADABRA</button>
+        </div>
+        <p id="error-message" class="error-message" role="alert" hidden></p>
+      </section>
+
+      <section id="animation-panel" class="animation-panel" aria-labelledby="animation-title" aria-live="polite">
+        <div class="animation-heading">
+          <div>
+            <p class="eyebrow">ANIMACE POSTUPU</p>
+            <h2 id="animation-title">Krok za krokem</h2>
+          </div>
+          <span id="step-counter" class="step-counter">Krok 1 z 1</span>
+        </div>
+        <div class="step-content">
+          <div class="step-copy">
+            <span id="step-kicker" class="step-kicker">ZAČÍNÁME</span>
+            <h3 id="step-title">Připravujeme ukázku</h3>
+            <p id="step-description"></p>
+          </div>
+          <div id="visualization" class="visualization"></div>
+        </div>
+        <div class="animation-controls">
+          <div class="transport-controls">
+            <button id="previous-button" class="icon-button" type="button" aria-label="Předchozí krok" title="Předchozí krok">←</button>
+            <button id="play-button" class="play-button" type="button"><span aria-hidden="true">▶</span> Přehrát</button>
+            <button id="next-button" class="icon-button" type="button" aria-label="Další krok" title="Další krok">→</button>
+          </div>
+          <label class="speed-control" for="speed-select">Rychlost
+            <select id="speed-select">
+              <option value="1500">Pomalu</option>
+              <option value="900" selected>Normálně</option>
+              <option value="450">Rychle</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <aside class="tip-card">
+        <span class="tip-icon" aria-hidden="true">✦</span>
+        <p><strong>Zkus přemýšlet:</strong> Která metoda by nejlépe zmenšila text, který sis zadal/a? Odpověď závisí na tom, jaké vzory v textu najdeme.</p>
+      </aside>
+    </main>
+    <footer class="page-footer">Každá metoda hledá v datech jiný druh opakování.</footer>
+  </body>
+</html>

@@ -174,8 +174,10 @@ function renderLzw(input, step) {
   const dict = step.dictionary || [];
   const columns = Math.max(1, Math.min(5, Math.floor(svgWidth / 125)));
   const rows = Math.ceil(dict.length / columns);
-  const height = Math.max(145, 130 + rows * 37);
-  const svg = createSvg(svgWidth, height, "LZW kódy, slovník a rekonstruovaný text");
+  const height = direction === "decompress" ? 140 : Math.max(145, 130 + rows * 37);
+  const svg = createSvg(svgWidth, height, direction === "decompress"
+    ? "LZW kódy a obnovovaný text"
+    : "LZW vstup, slovník a vytvořené kódy");
   if (direction === "decompress") {
     svg.append(svgElement("text", { x: 4, y: 15, class: "svg-label" }, "KÓDY KE ČTENÍ"));
     codes.forEach((code, index) => {
@@ -205,20 +207,22 @@ function renderLzw(input, step) {
     });
   }
 
-  svg.append(svgElement("text", { x: 4, y: 76, class: "svg-label" }, "SLOVNÍK"));
-  dict.forEach((entry, index) => {
-    const col = index % columns;
-    const row = Math.floor(index / columns);
-    const x = 4 + col * (svgWidth / columns);
-    const y = 87 + row * 36;
-    const isAdded = entry.phrase === step.addedPhrase;
-    svg.append(svgElement("rect", {
-      x, y, width: svgWidth / columns - 7, height: 29, rx: 6,
-      class: isAdded ? "svg-token-active" : "svg-token",
-    }));
-    svg.append(svgElement("text", { x: x + 8, y: y + 19, class: "svg-value" }, `${entry.code}  ${entry.phrase}`));
-  });
-  const outputY = 103 + rows * 36;
+  if (direction === "compress") {
+    svg.append(svgElement("text", { x: 4, y: 76, class: "svg-label" }, "SLOVNÍK"));
+    dict.forEach((entry, index) => {
+      const col = index % columns;
+      const row = Math.floor(index / columns);
+      const x = 4 + col * (svgWidth / columns);
+      const y = 87 + row * 36;
+      const isAdded = entry.phrase === step.addedPhrase;
+      svg.append(svgElement("rect", {
+        x, y, width: svgWidth / columns - 7, height: 29, rx: 6,
+        class: isAdded ? "svg-token-active" : "svg-token",
+      }));
+      svg.append(svgElement("text", { x: x + 8, y: y + 19, class: "svg-value" }, `${entry.code}  ${entry.phrase}`));
+    });
+  }
+  const outputY = direction === "decompress" ? 77 : 103 + rows * 36;
   svg.append(svgElement("text", {
     x: 4, y: outputY, class: "svg-label",
   }, direction === "decompress" ? "OBNOVENÝ TEXT" : "VYDANÉ KÓDY"));
@@ -256,10 +260,6 @@ function makeDetails(state, step) {
   if (state.method === "lzw" && state.direction === "compress" && step.addedPhrase) {
     details.append(element("p", { className: "lzw-note" },
       `Nová položka: „${step.addedPhrase}“ → kód ${step.addedCode}`));
-  }
-  if (state.method === "lzw" && state.direction === "decompress" && step.addedPhrase) {
-    details.append(element("p", { className: "lzw-note" },
-      `Nová položka slovníku: „${step.addedPhrase}“ → kód ${step.addedCode}`));
   }
   return details;
 }

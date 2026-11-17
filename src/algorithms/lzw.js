@@ -86,13 +86,10 @@ export function decodeLzw(input) {
       initialSymbols.add(symbol);
     }
   }
-  const initialDictionary = Array.from(dictionary, ([code, phrase]) => ({ code, phrase }));
   const steps = [{
     type: "decompress-start",
     title: "Začneme z číselných kódů",
-    description: "Pro ukázku známe počáteční abecedu znaků. Slovník delších skupin budeme znovu skládat při čtení kódů.",
-    dictionary: snapshotDictionary(new Map(Array.from(dictionary, ([code, phrase]) => [phrase, code]))),
-    initialDictionary,
+    description: "Počáteční abeceda nám pomůže rozpoznat první kódy. Potřebný slovník se dopočítává na pozadí; animace ukazuje jen kódy a obnovovaný text.",
     encodedCodes,
     codeIndex: -1,
     output: "",
@@ -112,25 +109,17 @@ export function decodeLzw(input) {
     }
 
     output += phrase;
-    let addedPhrase = "";
-    let addedCode = null;
     if (previous) {
-      addedPhrase = previous + Array.from(phrase)[0];
-      addedCode = dictionary.size;
-      dictionary.set(addedCode, addedPhrase);
+      dictionary.set(dictionary.size, previous + Array.from(phrase)[0]);
     }
     steps.push({
       type: "decode-code",
       title: `Kód ${code} znamená „${phrase}“`,
       description: previous
-        ? `Z kódu ${code} získáme „${phrase}“. Spojením předchozího zápisu a prvního znaku nové skupiny doplníme slovník.`
-        : `První kód ${code} najdeme v počáteční abecedě. Odpovídá skupině „${phrase}“.`,
-      dictionary: snapshotDictionary(new Map(Array.from(dictionary, ([entry, value]) => [value, entry]))),
-      initialDictionary,
+        ? `Z kódu ${code} obnovíme skupinu „${phrase}“ a připojíme ji k textu, který už máme.`
+        : `Počáteční abeceda nám ukáže, že kód ${code} odpovídá skupině „${phrase}“.`,
       encodedCodes,
       codeIndex: index,
-      addedPhrase,
-      addedCode,
       output,
     });
     previous = phrase;
@@ -140,8 +129,6 @@ export function decodeLzw(input) {
     type: "decompress-result",
     title: "Původní text je obnovený",
     description: "Všechny kódy jsme převedli zpět na skupiny znaků a složili z nich původní text.",
-    dictionary: snapshotDictionary(new Map(Array.from(dictionary, ([entry, value]) => [value, entry]))),
-    initialDictionary,
     encodedCodes,
     codeIndex: encodedCodes.length - 1,
     output,

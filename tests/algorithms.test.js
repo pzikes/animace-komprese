@@ -64,8 +64,10 @@ test("Huffman decompression reads variable-length codes and handles one symbol",
   }
 });
 
-test("LZW decompression rebuilds its dictionary and restores sample inputs", () => {
+test("LZW decompression restores text without exposing its work dictionary", () => {
   for (const input of ["ABABABA", "BANANA", "AAAA", "Z", "ABRACADABRA"]) {
-    assert.equal(decodeLzw(input).at(-1).output, input);
+    const steps = decodeLzw(input);
+    assert.equal(steps.at(-1).output, input);
+    assert.ok(steps.every((step) => !("dictionary" in step)));
   }
 });
